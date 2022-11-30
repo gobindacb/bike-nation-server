@@ -131,7 +131,6 @@ async function run() {
             const user = await usersCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'admin' });
 
-
         })
 
         app.post('/users', async (req, res) => {
