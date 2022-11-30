@@ -28,8 +28,7 @@ function verifyJWT(req, res, next) {
         }
         req.decoded = decoded;
         next();
-    })
-
+    });
 }
 
 async function run() {
