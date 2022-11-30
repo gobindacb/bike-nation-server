@@ -172,7 +172,6 @@ run().catch(console.log);
 //     client.close();
 // });
 
-
 app.get('/', async (req, res) => {
     res.send('Bike-Nation server is running');
 })
