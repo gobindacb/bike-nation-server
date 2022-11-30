@@ -66,7 +66,7 @@ async function run() {
             const query = { id: id }
             const bike = await productsCollection.find(query).toArray()
             res.send(bike);
-        })
+        });
 
         // app.get('/category/:id', async (req, res) => {
         //     const id = req.params.id;
