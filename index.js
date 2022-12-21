@@ -44,22 +44,19 @@ async function run() {
             res.send(category);
         });
 
+        app.post('/products', async (req, res) => {
+            const product = req.body;
+            const result = await productsCollection.insertOne(product);
+            res.send(result);
+
+        })
+
         app.get('/products', async (req, res) => {
             const query = {};
             const category = await productsCollection.find(query).toArray();
             res.send(category);
         });
 
-        // app.get('/categories/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     console.log(id);
-        //     const query = { id: (id) }
-        //     const cursor = productsCollection.find(query);
-        //     const product = await cursor.toArray();
-        //     res.send(product);
-        //     console.log(product)
-
-        // });
 
         app.get('/categories/:id', async (req, res) => {
             const id = req.params.id;
@@ -68,12 +65,20 @@ async function run() {
             res.send(bike);
         });
 
-        // app.get('/category/:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { categoryId: id }
-        //     const categoryLaptop = await laptopsCollection.find(query).toArray()
-        //     res.send(categoryLaptop);
-        // })
+        app.get('/products', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            const decodedEmail = req.decoded.email;
+
+            if (email !== decodedEmail) {
+                return res.status(403).send({ message: 'forbiden access' });
+            }
+
+            const query = { email: email };
+            const products = await productsCollection.find(query).toArray();
+            res.send(products);
+        })
+
+
 
         app.get('/bookings', verifyJWT, async (req, res) => {
             const email = req.query.email;
@@ -129,13 +134,33 @@ async function run() {
             const user = await usersCollection.findOne(query);
             res.send({ isAdmin: user?.role === 'admin' });
 
-        })
+        });
 
         app.post('/users', async (req, res) => {
             const user = req.body;
             const result = await usersCollection.insertOne(user);
             res.send(result);
         });
+
+        app.put('/users/seller/:id', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
+            const query = { email: decodedEmail };
+            const user = await usersCollection.findOne(query);
+
+            if (user?.role !== 'admin') {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    role: 'seller'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updateDoc, options)
+            res.send(result);
+        })
 
         app.put('/users/admin/:id', verifyJWT, async (req, res) => {
             const decodedEmail = req.decoded.email;
@@ -155,7 +180,9 @@ async function run() {
             }
             const result = await usersCollection.updateOne(filter, updateDoc, options);
             res.send(result);
-        })
+        });
+
+
 
     }
     finally {
@@ -164,11 +191,7 @@ async function run() {
 }
 run().catch(console.log);
 
-// client.connect(err => {
-//     const collection = client.db("test").collection("devices");
-//     // perform actions on the collection object
-//     client.close();
-// });
+
 
 app.get('/', async (req, res) => {
     res.send('Bike-Nation server is running');
